@@ -12,7 +12,7 @@ El sistema corre como un servicio de Linux administrado por `systemd`, ejecután
 
 ---
 
-## Arquitectura
+## Diagrama de flujo
 
 ```
 SQL Server Linux (On-Premise)
