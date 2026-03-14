@@ -13,33 +13,7 @@ El sistema corre como un servicio de Linux administrado por `systemd`, ejecután
 ---
 
 ## Diagrama de flujo
-
-```
-SQL Server Linux (On-Premise)
-┌─────────────────────────────────────────┐
-│                                         │
-│  Tablas de negocio                      │
-│       ↓ (cambios capturados)            │
-│  Transaction Log                        │
-│       ↓                                 │
-│  CDC (cdc.change_tables)                │
-│       ↓                                 │
-│  Script Python (synchronizer.py)        │
-│       ↓                                 │
-│  watermark.json (control de LSN)        │
-└──────────────────┬──────────────────────┘
-                   │ Conexión saliente
-                   │ puerto 1433
-                   ↓
-         Azure SQL Database
-┌─────────────────────────────────────────┐
-│                                         │
-│  Tablas replicadas                      │
-│                                         │
-└─────────────────────────────────────────┘
-
-systemd timer → ejecuta main.py cada 1 minuto
-```
+![Diagrama](img/Diagrama_flujo.png)
 
 ---
 
@@ -54,7 +28,6 @@ systemd timer → ejecuta main.py cada 1 minuto
 | Orquestación | systemd timer |
 | Pruebas | pytest + pytest-mock |
 | Gestión de entorno | python-dotenv |
-| Conexión a SQL Server | pymssql |
 
 ---
 
@@ -62,23 +35,21 @@ systemd timer → ejecuta main.py cada 1 minuto
 
 ```
 onprem-to-azure-cdc/
-├── main.py                  # Punto de entrada
-├── synchronizer.py          # Lógica principal de sincronización
-├── db_connections.py        # Gestión de conexiones a ambas bases de datos
-├── watermark_manager.py     # Control del LSN por tabla
-├── cdc_utils.py             # Utilidades CDC (tablas activas, validaciones)
-├── logger.py                # Configuración de logs con rotación
-├── watermark.json           # Estado de LSN por tabla (generado en runtime)
-├── .env                     # Variables de entorno (no incluido en el repo)
-├── .env.example             # Plantilla de variables de entorno
-├── tests/
-│   ├── __init__.py
-│   ├── test_cdc_utils.py
-│   ├── test_watermark_manager.py
-│   └── test_synchronizer.py
-└── systemd/
-    ├── cdc_homecenter.service
-    └── cdc_homecenter.timer
+├── main.py                  → Punto de entrada
+├── synchronizer.py          → Lógica principal de sincronización
+├── db_connections.py        → Gestión de conexiones
+├── watermark_manager.py     → Control del LSN por tabla
+├── cdc_utils.py             → Utilidades CDC
+├── logger.py                → Logs con rotación automática
+├── watermark.json           → Estado de LSN (generado en runtime)
+├── .env                     → Variables de entorno
+└── tests/
+    ├── test_cdc_utils.py
+    ├── test_watermark_manager.py
+    └── test_synchronizer.py
+└── config_systemd/
+    ├── cdc_homecenter.timer
+    └──  cdc_homecenter.service
 ```
 
 ---
@@ -230,11 +201,11 @@ Las pruebas usan mocks para las conexiones a base de datos, no requieren conecti
 
 ## Configuración del servicio systemd
 
-Copia los archivos de servicio:
+Copia y edita los archivos de servicio remplazando los datos necesarios y ajustando el timer al tiempo deseasdo (deafult 1s):
 
 ```bash
-sudo cp systemd/cdc_homecenter.service /etc/systemd/system/
-sudo cp systemd/cdc_homecenter.timer   /etc/systemd/system/
+sudo cp onprem-to-azure-cdc/config_systemd/cdc_homecenter.service /etc/systemd/system/
+sudo cp onprem-to-azure-cdc/config_systemd/cdc_homecenter.timer   /etc/systemd/system/
 ```
 
 Activa e inicia:
