@@ -1,0 +1,30 @@
+[Unit]
+# Nombre descriptivo del servicio
+Description=CDC <NombreProyecto> Synchronizer
+
+# Garantiza que el servicio arranca solo después de que
+# la red y SQL Server estén disponibles
+After=network.target mssql-server.service
+
+[Service]
+# oneshot indica que el proceso corre y termina
+# systemd espera a que finalice antes de marcarlo como completado
+Type=oneshot
+
+# Usuario del sistema bajo el cual corre el script
+# Nunca usar root para esto
+User=<usuario_del_sistema>
+
+# Ruta del directorio donde vive el proyecto
+WorkingDirectory=<ruta_del_proyecto>
+
+# Ruta al Python del entorno virtual seguido de la ruta a main.py
+ExecStart=<ruta_entorno_virtual>/bin/python3 <ruta_del_proyecto>/main.py
+
+# Redirige stdout y stderr al journal de systemd
+# Permite verlos con: journalctl -fu <nombre_servicio>.service
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[Unit]
+# Nombre descriptivo del timer
+Description=CDC <NombreProyecto> Synchronizer Timer
+
+# El timer requiere que el archivo .service exista
+Requires=<nombre_servicio>.service
+
+[Timer]
+# Segundos de espera tras el arranque del sistema
+# antes de la primera ejecución
+OnBootSec=30
+
+# Intervalo de repetición tras cada ejecución completada
+# Mínimo recomendado: 1min
+OnUnitActiveSec=1min
+
+# Precisión del timer en segundos
+# 1s garantiza que respete el intervalo sin desfases
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
